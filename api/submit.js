@@ -42,19 +42,19 @@ async function getAccessToken() {
   return json.access_token;
 }
 
-async function readSheet(token) {
+async function readEmailColumn(token) {
   const res = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Applications!C2:C`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
   const json = await res.json();
   if (!res.ok) throw new Error(`Sheet read failed: ${JSON.stringify(json)}`);
-  return json.values || [];
+  return (json.values || []).flat().map(e => String(e).toLowerCase().trim());
 }
 
 async function appendRow(token, row) {
   const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Applications!A:R:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Applications!A:S:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
     {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -66,40 +66,88 @@ async function appendRow(token, row) {
   return json;
 }
 
+function words(text) {
+  return String(text || "").trim().split(/\s+/).filter(Boolean);
+}
+
+function hasKeywords(text, keywords) {
+  const lower = String(text || "").toLowerCase();
+  return keywords.filter(k => lower.includes(k)).length;
+}
+
 function scoreApplication(data) {
   let score = 0;
   const hardFails = [];
+  const scoreBreakdown = {};
 
-  // Hard fails
-  if (data.attendedWebinar === "No") hardFails.push("Did not attend webinar");
-  if (data.morningCalls === "No") hardFails.push("Not willing to join morning calls");
-  if (data.hoursPerDay === "Less than 1 hour") hardFails.push("Less than 1 hour per day");
+  // ── Hard fails ───────────────────────────────────────────────
+  if (data.morningCalls === "No") {
+    hardFails.push("Not willing to join morning calls");
+  }
+  if (data.webinarAvailability === "No") {
+    hardFails.push("Cannot attend Monday/Friday webinars");
+  }
+  if (data.hoursPerDay === "Less than 1 hour") {
+    hardFails.push("Less than 1 hour per day");
+  }
+  if (data.attendedOnboarding === "No") {
+    hardFails.push("Did not attend onboarding session");
+  }
 
-  // Points
+  // ── Availability (max 6) ─────────────────────────────────────
   const hoursScore = { "1 to 2 hours": 1, "2 to 4 hours": 2, "4 hours or more": 3 };
-  score += hoursScore[data.hoursPerDay] || 0;
-  score += data.morningCalls === "Yes" ? 2 : data.morningCalls === "Most days" ? 1 : 0;
-  score += data.attendedWebinar === "Yes" ? 3 : data.attendedWebinar === "Watched the replay" ? 2 : 0;
-  score += data.attendedOnboarding === "Yes" ? 2 : 0;
-  score += data.soldBefore === "Yes" ? 2 : 0;
-  score += data.hasNetwork === "Yes" ? 2 : data.hasNetwork === "Building one" ? 1 : 0;
+  const avHours = hoursScore[data.hoursPerDay] || 0;
+  const avWebinar = data.webinarAvailability === "Yes" ? 3 : data.webinarAvailability === "Most weeks" ? 1 : 0;
+  scoreBreakdown.availability = avHours + avWebinar;
+  score += scoreBreakdown.availability;
 
-  // Sales process answer quality
-  const wordCount = String(data.salesProcess || "").trim().split(/\s+/).filter(Boolean).length;
-  score += wordCount >= 40 ? 2 : wordCount >= 20 ? 1 : 0;
+  // ── Time commitment (max 4) ──────────────────────────────────
+  const tcMorning = data.morningCalls === "Yes" ? 2 : data.morningCalls === "Most days" ? 1 : 0;
+  const tcOnboarding = data.attendedOnboarding === "Yes" ? 2 : 0;
+  scoreBreakdown.timeCommitment = tcMorning + tcOnboarding;
+  score += scoreBreakdown.timeCommitment;
 
+  // ── Experience & willingness (max 4) ─────────────────────────
+  const expSold = data.soldBefore === "Yes" ? 2 : 0;
+  const expNetwork = data.hasNetwork === "Yes" ? 2 : data.hasNetwork === "Building one" ? 1 : 0;
+  scoreBreakdown.experience = expSold + expNetwork;
+  score += scoreBreakdown.experience;
+
+  // ── Sales process understanding (max 6) ──────────────────────
+  const salesWords = words(data.salesProcess);
+  const salesKeywords = ["find", "identify", "prospect", "qualify", "pitch", "present", "close",
+    "follow", "objection", "convert", "lead", "client", "need", "solution", "relationship",
+    "persuade", "communicate", "trust", "value", "revenue", "target"];
+  const salesKwHits = hasKeywords(data.salesProcess, salesKeywords);
+  const salesWordScore = salesWords.length >= 50 ? 3 : salesWords.length >= 25 ? 2 : salesWords.length >= 10 ? 1 : 0;
+  const salesKwScore = salesKwHits >= 4 ? 3 : salesKwHits >= 2 ? 2 : salesKwHits >= 1 ? 1 : 0;
+  scoreBreakdown.salesProcessScore = Math.min(6, salesWordScore + salesKwScore);
+  score += scoreBreakdown.salesProcessScore;
+
+  // ── Koppoh/BOP understanding (max 4) ─────────────────────────
+  const bopWords = words(data.koppohUnderstanding);
+  const bopKeywords = ["photography", "photographer", "business", "course", "programme", "program",
+    "bedge", "koppoh", "bop", "income", "premium", "learn", "skill", "entrepreneur", "creative",
+    "money", "booking", "client", "training", "mentor"];
+  const bopKwHits = hasKeywords(data.koppohUnderstanding, bopKeywords);
+  const bopWordScore = bopWords.length >= 40 ? 2 : bopWords.length >= 15 ? 1 : 0;
+  const bopKwScore = bopKwHits >= 3 ? 2 : bopKwHits >= 1 ? 1 : 0;
+  scoreBreakdown.bopUnderstanding = Math.min(4, bopWordScore + bopKwScore);
+  score += scoreBreakdown.bopUnderstanding;
+
+  // ── Result (total max 24) ─────────────────────────────────────
   let result;
   if (hardFails.length > 0) {
     result = "FAIL";
-  } else if (score >= 8) {
+  } else if (score >= 15) {
     result = "PASS";
-  } else if (score >= 5) {
+  } else if (score >= 10) {
     result = "BORDERLINE";
   } else {
     result = "FAIL";
   }
 
-  return { score, hardFails, result };
+  return { score, hardFails, result, scoreBreakdown };
 }
 
 module.exports = async (req, res) => {
@@ -118,14 +166,13 @@ module.exports = async (req, res) => {
 
     const token = await getAccessToken();
 
-    // Check for duplicate email
-    const existing = await readSheet(token);
-    const emails = existing.flat().map(e => String(e).toLowerCase().trim());
-    if (emails.includes(data.email.toLowerCase().trim())) {
+    // Duplicate email check
+    const existingEmails = await readEmailColumn(token);
+    if (existingEmails.includes(data.email.toLowerCase().trim())) {
       return res.status(409).json({ success: false, error: "DUPLICATE_EMAIL" });
     }
 
-    const { score, hardFails, result } = scoreApplication(data);
+    const { score, hardFails, result, scoreBreakdown } = scoreApplication(data);
     const timestamp = new Date().toLocaleString("en-NG", { timeZone: "Africa/Lagos" });
 
     const row = [
@@ -134,19 +181,20 @@ module.exports = async (req, res) => {
       data.email || "",
       data.phone || "",
       data.occupation || "",
-      data.isStudent || "",
       data.hoursPerDay || "",
       data.morningCalls || "",
-      data.attendedWebinar || "",
+      data.webinarAvailability || "",
       data.attendedOnboarding || "",
       data.soldBefore || "",
       data.hasNetwork || "",
       data.salesProcess || "",
+      data.koppohUnderstanding || "",
       data.whyJoin || "",
       data.heardFrom || "",
       score,
       hardFails.join("; ") || "None",
       result,
+      JSON.stringify(scoreBreakdown),
     ];
 
     await appendRow(token, row);

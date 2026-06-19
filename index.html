@@ -89,10 +89,10 @@
           <div class="choice" data-value="Currently not working"><div class="dot"></div><div><strong>Currently not working</strong></div></div>
         </div>
       </div>
-      <div class="field"><label>Are you currently a student?</label>
-        <div class="choices" data-choice="isStudent">
-          <div class="choice" data-value="Yes"><div class="dot"></div><div><strong>Yes, I am currently a student</strong></div></div>
-          <div class="choice" data-value="No"><div class="dot"></div><div><strong>No, I am not a student</strong></div></div>
+      <div class="field"><label>Did you attend the BOP onboarding session?</label>
+        <div class="choices" data-choice="attendedOnboarding">
+          <div class="choice" data-value="Yes" data-score="3"><div class="dot"></div><div><strong>Yes, I attended</strong></div></div>
+          <div class="choice" data-value="No" data-score="0"><div class="dot"></div><div><strong>No, I did not attend</strong></div></div>
         </div>
       </div>
       <div class="err"></div>
@@ -131,17 +131,12 @@
       <div class="eyebrow">Programme Knowledge</div>
       <h2>What you know about BOP.</h2>
       <p class="sub">To sell BOP effectively, you need to have experienced the programme first-hand. These questions help us assess that.</p>
-      <div class="field"><label>Did you attend the BOP webinar?</label>
-        <div class="choices" data-choice="attendedWebinar">
-          <div class="choice" data-value="Yes" data-score="3"><div class="dot"></div><div><strong>Yes, I attended live</strong></div></div>
-          <div class="choice" data-value="Watched the replay" data-score="2"><div class="dot"></div><div><strong>I watched the replay</strong></div></div>
-          <div class="choice" data-value="No" data-score="0"><div class="dot"></div><div><strong>No, I did not attend or watch it</strong></div></div>
-        </div>
-      </div>
-      <div class="field"><label>Did you attend the onboarding session?</label>
-        <div class="choices" data-choice="attendedOnboarding">
-          <div class="choice" data-value="Yes" data-score="2"><div class="dot"></div><div><strong>Yes, I attended</strong></div></div>
-          <div class="choice" data-value="No" data-score="0"><div class="dot"></div><div><strong>No, I did not attend</strong></div></div>
+      <div class="field"><label>Will you be available to attend the BOP webinars every Monday and Friday?</label>
+        <span class="hint">These are live sessions. Being present is part of the role.</span>
+        <div class="choices" data-choice="webinarAvailability">
+          <div class="choice" data-value="Yes" data-score="3"><div class="dot"></div><div><strong>Yes, I can attend both days every week</strong></div></div>
+          <div class="choice" data-value="Most weeks" data-score="1"><div class="dot"></div><div><strong>I can attend most weeks but not always</strong></div></div>
+          <div class="choice" data-value="No" data-score="0"><div class="dot"></div><div><strong>No, I cannot commit to that schedule</strong></div></div>
         </div>
       </div>
       <div class="field"><label>Have you sold a product or service before?</label>
@@ -172,6 +167,11 @@
         <label>In a few simple sentences, explain the sales process as you understand it.</label>
         <span class="hint">No right or wrong answer. Just explain it in your own words.</span>
         <textarea name="salesProcess" required placeholder="Write your answer here..."></textarea>
+      </div>
+      <div class="field">
+        <label>What do you understand about what Koppoh sells and who it is for?</label>
+        <span class="hint">Tell us what you know about the BOP programme, what it offers, and who the right customer is.</span>
+        <textarea name="koppohUnderstanding" required placeholder="Write your answer here..."></textarea>
       </div>
       <div class="field">
         <label>Why do you want to join the Koppoh sales team?</label>
@@ -295,7 +295,7 @@ function validateStep(idx) {
     if (!email || !/\S+@\S+\.\S+/.test(email)) { showErr(step, 'Please enter a valid email address.'); return false; }
     if (!phone) { showErr(step, 'Please enter your WhatsApp number.'); return false; }
     if (!getChoice('occupation')) { showErr(step, 'Please select what you currently do.'); return false; }
-    if (!getChoice('isStudent')) { showErr(step, 'Please select whether you are a student.'); return false; }
+    if (!getChoice('attendedOnboarding')) { showErr(step, 'Please answer whether you attended the onboarding session.'); return false; }
   }
 
   if (idx === 1) {
@@ -304,16 +304,17 @@ function validateStep(idx) {
   }
 
   if (idx === 2) {
-    if (!getChoice('attendedWebinar')) { showErr(step, 'Please answer whether you attended the webinar.'); return false; }
-    if (!getChoice('attendedOnboarding')) { showErr(step, 'Please answer whether you attended the onboarding.'); return false; }
+    if (!getChoice('webinarAvailability')) { showErr(step, 'Please answer whether you can attend Monday and Friday webinars.'); return false; }
     if (!getChoice('soldBefore')) { showErr(step, 'Please answer whether you have sold before.'); return false; }
     if (!getChoice('hasNetwork')) { showErr(step, 'Please answer whether you have an existing network.'); return false; }
   }
 
   if (idx === 3) {
     const sp = step.querySelector('[name="salesProcess"]').value.trim();
+    const ku = step.querySelector('[name="koppohUnderstanding"]').value.trim();
     const wj = step.querySelector('[name="whyJoin"]').value.trim();
     if (sp.split(/\s+/).filter(Boolean).length < 10) { showErr(step, 'Please give a more complete answer about the sales process.'); return false; }
+    if (ku.split(/\s+/).filter(Boolean).length < 10) { showErr(step, 'Please explain what you understand about Koppoh and BOP.'); return false; }
     if (wj.split(/\s+/).filter(Boolean).length < 5) { showErr(step, 'Please tell us why you want to join.'); return false; }
   }
 
@@ -360,14 +361,14 @@ form.addEventListener('submit', async e => {
     email: form.querySelector('[name="email"]').value.trim().toLowerCase(),
     phone: form.querySelector('[name="phone"]').value.trim(),
     occupation: getChoice('occupation'),
-    isStudent: getChoice('isStudent'),
     hoursPerDay: getChoice('hoursPerDay'),
     morningCalls: getChoice('morningCalls'),
-    attendedWebinar: getChoice('attendedWebinar'),
+    webinarAvailability: getChoice('webinarAvailability'),
     attendedOnboarding: getChoice('attendedOnboarding'),
     soldBefore: getChoice('soldBefore'),
     hasNetwork: getChoice('hasNetwork'),
     salesProcess: form.querySelector('[name="salesProcess"]').value.trim(),
+    koppohUnderstanding: form.querySelector('[name="koppohUnderstanding"]').value.trim(),
     whyJoin: form.querySelector('[name="whyJoin"]').value.trim(),
     heardFrom: form.querySelector('[name="heardFrom"]').value,
   };
