@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Affiliate Application | Koppoh</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{font-family:'Satoshi','Montserrat',sans-serif;background:#080808;color:#fff;min-height:100vh;display:flex;justify-content:center;padding:46px 20px}
+  .wrap{width:100%;max-width:610px}
+  .logo-row{text-align:center;margin-bottom:36px}
+  .logo-row img{height:32px;width:auto}
+  .progress{display:flex;gap:5px;margin-bottom:38px}
+  .prog{height:2px;flex:1;background:#1c1c1c;border-radius:2px}
+  .prog.on{background:#0E821D}
+  .step{display:none}
+  .step.show{display:block;animation:rise .28s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .eyebrow{font-size:10px;font-weight:900;letter-spacing:2.4px;text-transform:uppercase;color:#0E821D;margin-bottom:12px}
+  h1{font-size:clamp(28px,7vw,40px);font-weight:900;line-height:1.06;letter-spacing:-.02em;margin-bottom:12px}
+  h2{font-size:24px;font-weight:900;line-height:1.16;margin-bottom:10px}
+  .sub{font-size:14px;color:#8c8c8c;line-height:1.8;margin-bottom:32px}
+  .notice{border-left:3px solid #0E821D;padding-left:14px;color:#d7d7d7;font-size:13px;line-height:1.7;margin-bottom:30px}
+  .field{margin-bottom:25px}
+  label{display:block;font-size:11px;font-weight:900;letter-spacing:1.8px;text-transform:uppercase;color:#d6d6d6;margin-bottom:10px}
+  .hint{display:block;color:#777;font-size:12px;line-height:1.6;margin:-4px 0 10px}
+  input,select,textarea{width:100%;background:transparent;border:none;border-bottom:1px solid #242424;color:#fff;font-family:'Satoshi','Montserrat',sans-serif;font-size:15px;padding:11px 0;outline:none;border-radius:0}
+  input:focus,select:focus,textarea:focus{border-bottom-color:#0E821D}
+  input::placeholder,textarea::placeholder{color:#555}
+  select option{background:#111;color:#fff}
+  textarea{min-height:100px;resize:vertical;line-height:1.65}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .choices{display:flex;flex-direction:column;gap:9px}
+  .choice{display:flex;gap:14px;align-items:flex-start;padding:14px 15px;border:1px solid #191919;cursor:pointer;transition:all .18s;user-select:none}
+  .choice:hover{border-color:#333}
+  .choice.sel{border-color:#0E821D;background:rgba(14,130,29,.08)}
+  .dot{width:14px;height:14px;border:1.5px solid #3a3a3a;border-radius:50%;flex:none;margin-top:2px}
+  .choice.sel .dot{background:#0E821D;border-color:#0E821D}
+  .choice strong{display:block;color:#e9e9e9;font-size:14px;line-height:1.42;margin-bottom:4px}
+  .choice span{display:block;color:#888;font-size:13px;line-height:1.55}
+  .choice strong:only-child{margin-bottom:0}
+  .consent-line{display:flex;gap:10px;align-items:flex-start;color:#bdbdbd;font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;line-height:1.65;margin:22px 0 14px;cursor:pointer}
+  .consent-line span{letter-spacing:0;text-transform:none}
+  .consent-line input{width:16px;height:16px;flex:0 0 16px;margin-top:3px;accent-color:#0E821D}
+  .btn{width:100%;background:#0E821D;color:#fff;font-family:'Satoshi','Montserrat',sans-serif;font-size:11px;font-weight:900;letter-spacing:2.2px;text-transform:uppercase;border:none;padding:17px;cursor:pointer;margin-top:4px}
+  .btn:hover{opacity:.86}
+  .btn:disabled{opacity:.55;cursor:default}
+  .btn-back{background:transparent;border:1px solid #1a1a1a;color:#777;font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;cursor:pointer;margin-bottom:18px}
+  .err{display:none;color:#EF8C0A;font-size:12px;font-weight:700;line-height:1.5;margin:8px 0 0}
+  .success{display:none}
+  .success.show{display:block;animation:rise .28s ease}
+  .success-icon{width:52px;height:52px;border:1.5px solid #0E821D;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
+  .success-icon svg{width:22px;height:22px;stroke:#0E821D;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+  .loading{display:none}
+  .loading.show{display:block;text-align:center;padding:42px 0 24px;animation:rise .28s ease}
+  .loader-mark{width:48px;height:48px;border:1px solid #1f1f1f;border-top-color:#0E821D;border-radius:50%;margin:0 auto 20px;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .footer{margin-top:44px;text-align:center;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#333}
+  @media(max-width:640px){body{padding:34px 18px}.grid{grid-template-columns:1fr}.consent-line input{width:19px;height:19px;flex-basis:19px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo-row"><img src="./koppoh-logo-green.png" alt="Koppoh"></div>
+  <div class="progress" id="progress"></div>
+
+  <form id="form" novalidate>
+
+    <!-- Step 1: About You -->
+    <section class="step show" data-name="About You">
+      <div class="eyebrow">Sales Affiliate Application</div>
+      <h1>Join the Koppoh sales team.</h1>
+      <p class="sub">We are building a team of motivated sales affiliates to help grow BOP. Tell us about yourself so we can understand if this is the right fit for you.</p>
+      <div class="grid">
+        <div class="field full"><label>Full name</label><input name="name" required placeholder="Your full name"></div>
+        <div class="field"><label>Email address</label><input name="email" type="email" required placeholder="name@email.com"></div>
+        <div class="field"><label>WhatsApp number</label><input name="phone" required placeholder="+234 800 000 0000"></div>
+      </div>
+      <div class="field"><label>What do you currently do?</label>
+        <div class="choices" data-choice="occupation">
+          <div class="choice" data-value="Student"><div class="dot"></div><div><strong>Student</strong></div></div>
+          <div class="choice" data-value="Employed full-time"><div class="dot"></div><div><strong>Employed full-time</strong></div></div>
+          <div class="choice" data-value="Employed part-time"><div class="dot"></div><div><strong>Employed part-time</strong></div></div>
+          <div class="choice" data-value="Freelancer"><div class="dot"></div><div><strong>Freelancer / Self-employed</strong></div></div>
+          <div class="choice" data-value="Business owner"><div class="dot"></div><div><strong>Business owner</strong></div></div>
+          <div class="choice" data-value="Currently not working"><div class="dot"></div><div><strong>Currently not working</strong></div></div>
+        </div>
+      </div>
+      <div class="field"><label>Are you currently a student?</label>
+        <div class="choices" data-choice="isStudent">
+          <div class="choice" data-value="Yes"><div class="dot"></div><div><strong>Yes, I am currently a student</strong></div></div>
+          <div class="choice" data-value="No"><div class="dot"></div><div><strong>No, I am not a student</strong></div></div>
+        </div>
+      </div>
+      <div class="err"></div>
+      <button type="button" class="btn next">Continue</button>
+    </section>
+
+    <!-- Step 2: Availability -->
+    <section class="step" data-name="Availability">
+      <button type="button" class="btn-back prev">Back</button>
+      <div class="eyebrow">Availability</div>
+      <h2>Time commitment.</h2>
+      <p class="sub">This role requires real time and focus. Be honest about what you can commit to — it helps us place the right people in the right positions.</p>
+      <div class="field"><label>How many hours per day can you dedicate to this role?</label>
+        <div class="choices" data-choice="hoursPerDay">
+          <div class="choice" data-value="Less than 1 hour" data-score="0"><div class="dot"></div><div><strong>Less than 1 hour</strong></div></div>
+          <div class="choice" data-value="1 to 2 hours" data-score="1"><div class="dot"></div><div><strong>1 to 2 hours</strong></div></div>
+          <div class="choice" data-value="2 to 4 hours" data-score="2"><div class="dot"></div><div><strong>2 to 4 hours</strong></div></div>
+          <div class="choice" data-value="4 hours or more" data-score="3"><div class="dot"></div><div><strong>4 hours or more</strong></div></div>
+        </div>
+      </div>
+      <div class="field"><label>Are you willing to join a 15-minute morning call at 10am every day?</label>
+        <span class="hint">These calls are short, structured, and mandatory for all active team members. 10am WAT (Lagos time).</span>
+        <div class="choices" data-choice="morningCalls">
+          <div class="choice" data-value="Yes" data-score="2"><div class="dot"></div><div><strong>Yes, I can join every day</strong></div></div>
+          <div class="choice" data-value="Most days" data-score="1"><div class="dot"></div><div><strong>I can join most days</strong></div></div>
+          <div class="choice" data-value="No" data-score="0"><div class="dot"></div><div><strong>No, I cannot commit to that</strong></div></div>
+        </div>
+      </div>
+      <div class="err"></div>
+      <button type="button" class="btn next">Continue</button>
+    </section>
+
+    <!-- Step 3: Programme Knowledge -->
+    <section class="step" data-name="Programme Knowledge">
+      <button type="button" class="btn-back prev">Back</button>
+      <div class="eyebrow">Programme Knowledge</div>
+      <h2>What you know about BOP.</h2>
+      <p class="sub">To sell BOP effectively, you need to have experienced the programme first-hand. These questions help us assess that.</p>
+      <div class="field"><label>Did you attend the BOP webinar?</label>
+        <div class="choices" data-choice="attendedWebinar">
+          <div class="choice" data-value="Yes" data-score="3"><div class="dot"></div><div><strong>Yes, I attended live</strong></div></div>
+          <div class="choice" data-value="Watched the replay" data-score="2"><div class="dot"></div><div><strong>I watched the replay</strong></div></div>
+          <div class="choice" data-value="No" data-score="0"><div class="dot"></div><div><strong>No, I did not attend or watch it</strong></div></div>
+        </div>
+      </div>
+      <div class="field"><label>Did you attend the onboarding session?</label>
+        <div class="choices" data-choice="attendedOnboarding">
+          <div class="choice" data-value="Yes" data-score="2"><div class="dot"></div><div><strong>Yes, I attended</strong></div></div>
+          <div class="choice" data-value="No" data-score="0"><div class="dot"></div><div><strong>No, I did not attend</strong></div></div>
+        </div>
+      </div>
+      <div class="field"><label>Have you sold a product or service before?</label>
+        <div class="choices" data-choice="soldBefore">
+          <div class="choice" data-value="Yes" data-score="2"><div class="dot"></div><div><strong>Yes, I have sold before</strong></div></div>
+          <div class="choice" data-value="No" data-score="0"><div class="dot"></div><div><strong>No, I have not sold anything</strong></div></div>
+        </div>
+      </div>
+      <div class="field"><label>Do you have an existing community or network you can reach?</label>
+        <span class="hint">For example: WhatsApp groups, Instagram following, referral base, or a community you are active in.</span>
+        <div class="choices" data-choice="hasNetwork">
+          <div class="choice" data-value="Yes" data-score="2"><div class="dot"></div><div><strong>Yes, I have an active network</strong></div></div>
+          <div class="choice" data-value="Building one" data-score="1"><div class="dot"></div><div><strong>I am building one</strong></div></div>
+          <div class="choice" data-value="No" data-score="0"><div class="dot"></div><div><strong>No, not yet</strong></div></div>
+        </div>
+      </div>
+      <div class="err"></div>
+      <button type="button" class="btn next">Continue</button>
+    </section>
+
+    <!-- Step 4: Sales Knowledge -->
+    <section class="step" data-name="Sales Knowledge">
+      <button type="button" class="btn-back prev">Back</button>
+      <div class="eyebrow">Sales Knowledge</div>
+      <h2>Show us what you know.</h2>
+      <p class="sub">These are short written questions. Be clear and direct — we are not looking for perfect answers, we are looking for honest ones.</p>
+      <div class="field">
+        <label>In a few simple sentences, explain the sales process as you understand it.</label>
+        <span class="hint">No right or wrong answer. Just explain it in your own words.</span>
+        <textarea name="salesProcess" required placeholder="Write your answer here..."></textarea>
+      </div>
+      <div class="field">
+        <label>Why do you want to join the Koppoh sales team?</label>
+        <textarea name="whyJoin" required placeholder="What draws you to this role..."></textarea>
+      </div>
+      <div class="err"></div>
+      <button type="button" class="btn next">Continue</button>
+    </section>
+
+    <!-- Step 5: Final -->
+    <section class="step" data-name="Final Details">
+      <button type="button" class="btn-back prev">Back</button>
+      <div class="eyebrow">Final Details</div>
+      <h2>One last thing.</h2>
+      <p class="sub">Tell us how you found out about this role and confirm you understand the commitment required.</p>
+      <div class="field"><label>How did you hear about this opportunity?</label>
+        <select name="heardFrom" required>
+          <option value="">Select one</option>
+          <option>From the BOP onboarding session</option>
+          <option>WhatsApp group or message</option>
+          <option>Instagram</option>
+          <option>From a friend or colleague</option>
+          <option>From Bedge directly</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="notice">This role is a serious commitment. Active team members are expected to join daily morning calls, hit referral targets, and sell with integrity. If you are not ready to commit fully, this is not the right time to apply.</div>
+      <label class="consent-line">
+        <input type="checkbox" name="consent" required>
+        <span>I understand the commitment required for this role and confirm that everything I have shared in this application is accurate.</span>
+      </label>
+      <div class="err"></div>
+      <button type="submit" class="btn" id="submitBtn">Submit Application</button>
+    </section>
+
+  </form>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loader-mark"></div>
+    <div class="eyebrow">Processing</div>
+    <h2 style="font-size:24px;margin-bottom:10px">Submitting your application.</h2>
+    <p style="color:#8c8c8c;font-size:14px;line-height:1.75">Please wait while we record your application.</p>
+  </div>
+
+  <!-- Success -->
+  <div class="success" id="success">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="eyebrow" style="text-align:center">Application Received</div>
+    <h2 style="font-size:24px;text-align:center;margin-bottom:14px">You are all done.</h2>
+    <p style="color:#8c8c8c;font-size:14px;line-height:1.8;text-align:center;margin-bottom:0">Thank you for applying to join the Koppoh sales team. We have received your application and our team will review it carefully. You will hear from us very soon.</p>
+  </div>
+
+  <div class="footer">Koppoh &mdash; Sales Affiliate Programme</div>
+</div>
+
+<script>
+const STEPS = [...document.querySelectorAll('.step')];
+const progress = document.getElementById('progress');
+const form = document.getElementById('form');
+const loadingEl = document.getElementById('loading');
+const successEl = document.getElementById('success');
+let current = 0;
+
+// Build progress dots
+STEPS.forEach(() => {
+  const d = document.createElement('div');
+  d.className = 'prog';
+  progress.appendChild(d);
+});
+
+function updateProgress() {
+  [...progress.children].forEach((d, i) => {
+    d.classList.toggle('on', i <= current);
+  });
+}
+updateProgress();
+
+// Choice selection
+document.querySelectorAll('[data-choice]').forEach(group => {
+  group.querySelectorAll('.choice').forEach(c => {
+    c.addEventListener('click', () => {
+      group.querySelectorAll('.choice').forEach(x => x.classList.remove('sel'));
+      c.classList.add('sel');
+    });
+  });
+});
+
+function getChoice(name) {
+  const sel = document.querySelector(`[data-choice="${name}"] .choice.sel`);
+  return sel ? sel.dataset.value : '';
+}
+
+function getChoiceScore(name) {
+  const sel = document.querySelector(`[data-choice="${name}"] .choice.sel`);
+  return sel ? parseInt(sel.dataset.score || '0', 10) : 0;
+}
+
+function showErr(section, msg) {
+  const err = section.querySelector('.err');
+  err.textContent = msg;
+  err.style.display = 'block';
+}
+
+function clearErr(section) {
+  const err = section.querySelector('.err');
+  if (err) { err.textContent = ''; err.style.display = 'none'; }
+}
+
+function validateStep(idx) {
+  const step = STEPS[idx];
+  clearErr(step);
+
+  if (idx === 0) {
+    const name = step.querySelector('[name="name"]').value.trim();
+    const email = step.querySelector('[name="email"]').value.trim();
+    const phone = step.querySelector('[name="phone"]').value.trim();
+    if (!name) { showErr(step, 'Please enter your full name.'); return false; }
+    if (!email || !/\S+@\S+\.\S+/.test(email)) { showErr(step, 'Please enter a valid email address.'); return false; }
+    if (!phone) { showErr(step, 'Please enter your WhatsApp number.'); return false; }
+    if (!getChoice('occupation')) { showErr(step, 'Please select what you currently do.'); return false; }
+    if (!getChoice('isStudent')) { showErr(step, 'Please select whether you are a student.'); return false; }
+  }
+
+  if (idx === 1) {
+    if (!getChoice('hoursPerDay')) { showErr(step, 'Please select how many hours per day you can dedicate.'); return false; }
+    if (!getChoice('morningCalls')) { showErr(step, 'Please answer whether you can join morning calls.'); return false; }
+  }
+
+  if (idx === 2) {
+    if (!getChoice('attendedWebinar')) { showErr(step, 'Please answer whether you attended the webinar.'); return false; }
+    if (!getChoice('attendedOnboarding')) { showErr(step, 'Please answer whether you attended the onboarding.'); return false; }
+    if (!getChoice('soldBefore')) { showErr(step, 'Please answer whether you have sold before.'); return false; }
+    if (!getChoice('hasNetwork')) { showErr(step, 'Please answer whether you have an existing network.'); return false; }
+  }
+
+  if (idx === 3) {
+    const sp = step.querySelector('[name="salesProcess"]').value.trim();
+    const wj = step.querySelector('[name="whyJoin"]').value.trim();
+    if (sp.split(/\s+/).filter(Boolean).length < 10) { showErr(step, 'Please give a more complete answer about the sales process.'); return false; }
+    if (wj.split(/\s+/).filter(Boolean).length < 5) { showErr(step, 'Please tell us why you want to join.'); return false; }
+  }
+
+  if (idx === 4) {
+    const heardFrom = step.querySelector('[name="heardFrom"]').value;
+    if (!heardFrom) { showErr(step, 'Please tell us how you heard about this.'); return false; }
+    if (!step.querySelector('[name="consent"]').checked) { showErr(step, 'Please confirm that you understand the commitment required.'); return false; }
+  }
+
+  return true;
+}
+
+function goTo(idx) {
+  STEPS[current].classList.remove('show');
+  current = idx;
+  STEPS[current].classList.add('show');
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.querySelectorAll('.next').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!validateStep(current)) return;
+    if (current < STEPS.length - 1) goTo(current + 1);
+  });
+});
+
+document.querySelectorAll('.prev').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (current > 0) goTo(current - 1);
+  });
+});
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!validateStep(current)) return;
+
+  form.style.display = 'none';
+  progress.style.display = 'none';
+  loadingEl.classList.add('show');
+
+  const data = {
+    name: form.querySelector('[name="name"]').value.trim(),
+    email: form.querySelector('[name="email"]').value.trim().toLowerCase(),
+    phone: form.querySelector('[name="phone"]').value.trim(),
+    occupation: getChoice('occupation'),
+    isStudent: getChoice('isStudent'),
+    hoursPerDay: getChoice('hoursPerDay'),
+    morningCalls: getChoice('morningCalls'),
+    attendedWebinar: getChoice('attendedWebinar'),
+    attendedOnboarding: getChoice('attendedOnboarding'),
+    soldBefore: getChoice('soldBefore'),
+    hasNetwork: getChoice('hasNetwork'),
+    salesProcess: form.querySelector('[name="salesProcess"]').value.trim(),
+    whyJoin: form.querySelector('[name="whyJoin"]').value.trim(),
+    heardFrom: form.querySelector('[name="heardFrom"]').value,
+  };
+
+  try {
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+
+    loadingEl.classList.remove('show');
+
+    if (!res.ok && json.error === 'DUPLICATE_EMAIL') {
+      form.style.display = '';
+      progress.style.display = '';
+      STEPS.forEach((s, i) => s.classList.toggle('show', i === 0));
+      current = 0;
+      updateProgress();
+      const errEl = STEPS[0].querySelector('.err');
+      errEl.textContent = 'An application with this email address already exists. Each person can only apply once.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    successEl.classList.add('show');
+  } catch (err) {
+    loadingEl.classList.remove('show');
+    form.style.display = '';
+    progress.style.display = '';
+    const step = STEPS[current];
+    showErr(step, 'Something went wrong. Please check your connection and try again.');
+  }
+});
+</script>
+</body>
+</html>
